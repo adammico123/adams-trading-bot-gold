@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme {
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  --font-sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --color-bg: #0e0f0d;
+  --color-panel: #16180f14;
+  --color-surface: #15160f;
+  --color-surface-raised: #1b1d15;
+  --color-line: #2a2c22;
+  --color-line-soft: #202218;
+
+  --color-gold: #c9a356;
+  --color-gold-dim: #8a7340;
+  --color-gold-soft: #3a3221;
+
+  --color-text: #ececE6;
+  --color-text-dim: #9b9a8e;
+  --color-text-faint: #6b6a5f;
+
+  --color-up: #7fae6e;
+  --color-down: #b56a5a;
+}
+
+html {
+  background: var(--color-bg);
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-dot {
+    animation: none;
+  }
+}
+
+::selection {
+  background: var(--color-gold-soft);
+  color: var(--color-text);
+}
