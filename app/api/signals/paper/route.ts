@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { redis, SIGNALS_KEY, STATS_KEY, MAX_STORED_SIGNALS, Signal, getStoredSignals } from "@/lib/redis";
+import {
+  redis,
+  SIGNALS_KEY,
+  ACCOUNT_KEY,
+  MAX_STORED_SIGNALS,
+  Signal,
+  getStoredSignals,
+  getAccount,
+  applySignalToAccount,
+} from "@/lib/redis";
 
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || "";
 
@@ -39,15 +48,21 @@ export async function POST(req: NextRequest) {
     note: typeof body.note === "string" ? body.note : undefined,
   };
 
+  // Store the raw signal in the log.
   const existing = await getStoredSignals();
   const updated = [signal, ...existing].slice(0, MAX_STORED_SIGNALS);
   await redis.set(SIGNALS_KEY, updated);
 
-  return NextResponse.json({ status: "received", signal });
+  // Apply the signal to the account state (opens/closes positions, updates equity).
+  const currentAccount = await getAccount();
+  const newAccount = applySignalToAccount(currentAccount, signal);
+  await redis.set(ACCOUNT_KEY, newAccount);
+
+  return NextResponse.json({ status: "received", signal, account: newAccount });
 }
 
 export async function GET() {
   const signals = await getStoredSignals();
-  const stats = (await redis.get(STATS_KEY)) || null;
-  return NextResponse.json({ signals, stats });
+  const account = await getAccount();
+  return NextResponse.json({ signals, account });
 }
