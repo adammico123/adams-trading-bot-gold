@@ -14,9 +14,6 @@ import {
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || "";
 
 export async function POST(req: NextRequest) {
-  // Capture the raw text body FIRST, before any parsing, and log it
-  // regardless of what happens next. This lets us see exactly what
-  // TradingView actually sent, even on requests that get rejected.
   const rawText = await req.text();
 
   try {
