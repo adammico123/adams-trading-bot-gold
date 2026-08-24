@@ -11,6 +11,7 @@ export const redis = new Redis({
 
 export const SIGNALS_KEY = "paper:signals";
 export const ACCOUNT_KEY = "paper:account";
+export const DEBUG_KEY = "paper:debug_log";
 export const MAX_STORED_SIGNALS = 200;
 
 // Gold futures (GC) point value: a $1 move in price = $100 P&L per contract.

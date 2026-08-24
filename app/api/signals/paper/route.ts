@@ -3,6 +3,7 @@ import {
   redis,
   SIGNALS_KEY,
   ACCOUNT_KEY,
+  DEBUG_KEY,
   MAX_STORED_SIGNALS,
   Signal,
   getStoredSignals,
@@ -13,11 +14,24 @@ import {
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || "";
 
 export async function POST(req: NextRequest) {
+  // Capture the raw text body FIRST, before any parsing, and log it
+  // regardless of what happens next. This lets us see exactly what
+  // TradingView actually sent, even on requests that get rejected.
+  const rawText = await req.text();
+
+  try {
+    const debugEntries = (await redis.get<string[]>(DEBUG_KEY)) || [];
+    const entry = `[${new Date().toISOString()}] RAW BODY: ${rawText}`;
+    await redis.set(DEBUG_KEY, [entry, ...debugEntries].slice(0, 20));
+  } catch (err) {
+    console.error("Failed to write debug log:", err);
+  }
+
   let body: Record<string, unknown>;
   try {
-    body = await req.json();
+    body = JSON.parse(rawText);
   } catch {
-    return NextResponse.json({ error: "invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: "invalid JSON body", rawBodyReceived: rawText }, { status: 400 });
   }
 
   if (WEBHOOK_SECRET && body.secret !== WEBHOOK_SECRET) {
@@ -26,7 +40,7 @@ export async function POST(req: NextRequest) {
 
   if (!body.ticker || !body.action) {
     return NextResponse.json(
-      { error: "ticker and action are required" },
+      { error: "ticker and action are required", rawBodyReceived: rawText },
       { status: 400 }
     );
   }
@@ -34,7 +48,7 @@ export async function POST(req: NextRequest) {
   const validActions = ["buy", "sell", "exit"];
   if (!validActions.includes(String(body.action))) {
     return NextResponse.json(
-      { error: `action must be one of ${validActions.join(", ")}` },
+      { error: `action must be one of ${validActions.join(", ")}`, rawBodyReceived: rawText },
       { status: 400 }
     );
   }
@@ -48,12 +62,10 @@ export async function POST(req: NextRequest) {
     note: typeof body.note === "string" ? body.note : undefined,
   };
 
-  // Store the raw signal in the log.
   const existing = await getStoredSignals();
   const updated = [signal, ...existing].slice(0, MAX_STORED_SIGNALS);
   await redis.set(SIGNALS_KEY, updated);
 
-  // Apply the signal to the account state (opens/closes positions, updates equity).
   const currentAccount = await getAccount();
   const newAccount = applySignalToAccount(currentAccount, signal);
   await redis.set(ACCOUNT_KEY, newAccount);
