@@ -94,7 +94,10 @@ export function applySignalToAccount(
     };
   }
 
-  if (action === "exit") {
+  // "exit" or "sell" both mean "close the open position" - the strategy's
+  // webhook sends "sell" (via {{strategy.order.action}}) for a closing
+  // order, so both need to be treated identically here.
+  if (action === "exit" || action === "sell") {
     if (!account.position || !price) {
       return account;
     }
