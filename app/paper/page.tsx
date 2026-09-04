@@ -6,8 +6,14 @@ import { getStoredSignals, getAccount, STARTING_EQUITY } from "@/lib/redis";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("en-US", { hour12: false });
+function formatDateTime(iso: string) {
+  const d = new Date(iso);
+  const datePart = d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+  const timePart = d.toLocaleTimeString("en-US", { hour12: false });
+  return `${datePart} ${timePart}`;
 }
 
 function formatCurrency(n: number) {
@@ -83,8 +89,8 @@ export default async function PaperTradingPage() {
                   key={i}
                   className="px-5 py-3 flex items-center gap-4 text-sm font-mono"
                 >
-                  <span className="text-text-faint w-24">
-                    {formatTime(t.closedAt)}
+                  <span className="text-text-faint w-36">
+                    {formatDateTime(t.closedAt)}
                   </span>
                   <span className="text-text-dim w-16">{t.quantity} ct</span>
                   <span className="text-text-dim w-24">
@@ -118,8 +124,8 @@ export default async function PaperTradingPage() {
                   key={i}
                   className="px-5 py-3 flex items-center gap-4 text-sm font-mono"
                 >
-                  <span className="text-text-faint w-24">
-                    {formatTime(s.receivedAt)}
+                  <span className="text-text-faint w-36">
+                    {formatDateTime(s.receivedAt)}
                   </span>
                   <span
                     className={
