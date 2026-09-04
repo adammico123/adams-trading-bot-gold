@@ -1,10 +1,12 @@
 import Shell from "@/components/Shell";
 import PageHeader from "@/components/PageHeader";
 import StatCard from "@/components/StatCard";
-import { getStoredSignals, getAccount, STARTING_EQUITY, POINT_VALUE } from "@/lib/redis";
+import { getStoredSignals, getAccount, STARTING_EQUITY } from "@/lib/redis";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+const WAGER_PERCENT_OF_BALANCE = 0.02;
 
 function formatDateTime(iso: string) {
   const d = new Date(iso);
@@ -85,7 +87,7 @@ export default async function PaperTradingPage() {
             </div>
             <div className="divide-y divide-line-soft">
               {account.closedTrades.slice(0, 10).map((t, i) => {
-                const wagered = t.entryPrice * t.quantity * POINT_VALUE;
+                const wagered = STARTING_EQUITY * WAGER_PERCENT_OF_BALANCE;
                 return (
                   <div
                     key={i}
