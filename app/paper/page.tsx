@@ -1,7 +1,7 @@
 import Shell from "@/components/Shell";
 import PageHeader from "@/components/PageHeader";
 import StatCard from "@/components/StatCard";
-import { getStoredSignals, getAccount, STARTING_EQUITY } from "@/lib/redis";
+import { getStoredSignals, getAccount, STARTING_EQUITY, POINT_VALUE } from "@/lib/redis";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -84,28 +84,34 @@ export default async function PaperTradingPage() {
               <h3 className="text-sm text-text-dim">Closed trades</h3>
             </div>
             <div className="divide-y divide-line-soft">
-              {account.closedTrades.slice(0, 10).map((t, i) => (
-                <div
-                  key={i}
-                  className="px-5 py-3 flex items-center gap-4 text-sm font-mono"
-                >
-                  <span className="text-text-faint w-36">
-                    {formatDateTime(t.closedAt)}
-                  </span>
-                  <span className="text-text-dim w-16">{t.quantity} ct</span>
-                  <span className="text-text-dim w-24">
-                    {t.entryPrice.toFixed(2)} → {t.exitPrice.toFixed(2)}
-                  </span>
-                  <span
-                    className={
-                      "font-medium " + (t.pnl >= 0 ? "text-up" : "text-down")
-                    }
+              {account.closedTrades.slice(0, 10).map((t, i) => {
+                const wagered = t.entryPrice * t.quantity * POINT_VALUE;
+                return (
+                  <div
+                    key={i}
+                    className="px-5 py-3 flex items-center gap-4 text-sm font-mono"
                   >
-                    {t.pnl >= 0 ? "+" : ""}
-                    {formatCurrency(t.pnl)}
-                  </span>
-                </div>
-              ))}
+                    <span className="text-text-faint w-36">
+                      {formatDateTime(t.closedAt)}
+                    </span>
+                    <span className="text-text-dim w-16">{t.quantity} ct</span>
+                    <span className="text-text-dim w-24">
+                      {t.entryPrice.toFixed(2)} → {t.exitPrice.toFixed(2)}
+                    </span>
+                    <span className="text-text-faint w-28">
+                      Wagered {formatCurrency(wagered)}
+                    </span>
+                    <span
+                      className={
+                        "font-medium " + (t.pnl >= 0 ? "text-up" : "text-down")
+                      }
+                    >
+                      {t.pnl >= 0 ? "+" : ""}
+                      {formatCurrency(t.pnl)}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
